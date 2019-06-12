@@ -10,11 +10,28 @@ import requests
 URL = 'https://api.noopschallenge.com/fizzbot/'
 DB_FILE = 'fizzbot.db'
 
+MOCK_QUESTIONS = {
+    1: {},
+    3: {
+        'message': 'FizzBuzz',
+        'numbers': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+        'rules': [{'number': 3, 'response': 'Fizz'},
+                  {'number': 5, 'response': 'Buzz'}],
+    },
+    6: {
+        'message': 'BeepBoop',
+        'numbers': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        'rules': [{'number': 2, 'response': 'Beep'},
+                  {'number': 5, 'response': 'Boop'}],
+    },
+}
+
 
 class Answerer:
 
     db = {}
     index = None
+    question_nr = 0
     finished = False
 
     @property
@@ -36,8 +53,21 @@ class Answerer:
     def qm(self):
         return self.q['message']
 
+    def predict_question(self):
+        if self.question_nr in MOCK_QUESTIONS.keys():
+            print('... using a mocked question.')
+            self.db[self.index] = {'question': MOCK_QUESTIONS[self.question_nr]}
+            return True
+
     def get_question(self):
+        self.question_nr += 1
+        print(f'Question nr.: {self.question_nr}')
+
         if self.index not in self.db:
+            if self.predict_question():
+                return
+
+            print('Will download a new question...')
             r = requests.get(self.url)
             q = r.json()
             self.db[self.index] = {'question': q}
@@ -59,7 +89,7 @@ class Answerer:
                         print(f'My answer: {answer}')
                         break
                 except Exception:
-                    print(f'Automated answering {fn} failed')
+                    print(f'Automated answering {fn} failed.')
                     traceback.print_exc()
 
             else:

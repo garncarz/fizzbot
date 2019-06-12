@@ -1,3 +1,3 @@
-# GitHub Noops
+# GitHub Noops: Fizzbot
 
-My solutions for https://noopschallenge.com.
+My solution for https://noopschallenge.com/challenges/fizzbot.
