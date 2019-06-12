@@ -15,6 +15,7 @@ class Answerer:
 
     db = {}
     index = None
+    finished = False
 
     @property
     def url(self):
@@ -48,7 +49,7 @@ class Answerer:
             self.index = '1'  # no answering for the introduction
             return
 
-        if 'answer' in self.item and self.item.get('ack', {}).get('result') == 'correct':
+        if 'answer' in self.item and self.item.get('ack', {}).get('result') in ['correct', 'interview complete']:
             answer = self.item['answer']
         else:
             for fn in filter(lambda attr: attr.startswith('solve_'), dir(self)):
@@ -72,8 +73,12 @@ class Answerer:
         self.item['ack'] = ack
         pprint(ack)
 
-        assert ack['result'] == 'correct'
+        assert ack['result'] in ['correct', 'interview complete']
         self.save()
+
+        if ack['result'] == 'interview complete':
+            self.finished = True
+            return
 
         self.index = ack['nextQuestion'].split('/')[-1]
 
@@ -88,10 +93,12 @@ class Answerer:
         with open(DB_FILE, 'w') as f:
             f.write(json.dumps(self.db))
 
-    def solve_fizzbuzz(self):
+    def solve_dividing(self):
         if not (
             ('Fizz' in self.qm and 'Buzz' in self.qm)
+            or ('Beep' in self.qm and 'Boop' in self.qm)
             or self.qm == 'Here are a few more numbers. The same rules apply.'
+            or 'This time there are three rules. Can you figure out what to do?' in self.qm
         ):
             return
 
@@ -117,7 +124,7 @@ def main():
     a = Answerer()
     a.load()
 
-    for _ in range(10):
+    while not a.finished:
         a.get_question()
         a.answer()
 
