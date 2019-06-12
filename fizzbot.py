@@ -34,6 +34,9 @@ class Answerer:
     question_nr = 0
     finished = False
 
+    def __init__(self):
+        self.session = requests.Session()
+
     @property
     def url(self):
         if not self.index:
@@ -68,7 +71,7 @@ class Answerer:
                 return
 
             print('Will download a new question...')
-            r = requests.get(self.url)
+            r = self.session.get(self.url)
             q = r.json()
             self.db[self.index] = {'question': q}
 
@@ -97,7 +100,7 @@ class Answerer:
 
             self.item['answer'] = answer
 
-        r = requests.post(self.url, json={'answer': answer})
+        r = self.session.post(self.url, json={'answer': answer})
         ack = r.json()
 
         self.item['ack'] = ack
